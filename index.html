@@ -2,31 +2,35 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Bestiary Full Scroll Fix</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<title>Bestiary Scroll Fixed</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
-  /* БАЗОВЫЕ НАСТРОЙКИ */
-  html, body {
+  /* Максимально открываем скролл */
+  html {
+    overflow-y: auto !important;
+    height: auto !important;
+  }
+  
+  body {
     margin: 0;
     padding: 0;
     background-color: #121212;
     color: #ffffff;
-    font-family: "Comic Sans MS", "Comic Sans", cursive, sans-serif;
-    /* Разрешаем скролл везде */
-    overflow-x: hidden;
-    overflow-y: auto;
+    font-family: "Comic Sans MS", cursive, sans-serif;
+    /* Принудительный вертикальный скролл для сенсоров */
+    touch-action: pan-y !important;
     -webkit-overflow-scrolling: touch;
+    min-height: 101vh; /* Чуть больше экрана, чтобы скролл был всегда активен */
   }
 
-  /* ШАПКА - прилипает к верху */
+  /* Навигация */
   .nav-header {
     background: #1a1a1a;
-    border-bottom: 1px solid #333;
+    border-bottom: 2px solid #333;
     position: sticky;
     top: 0;
-    z-index: 1000;
-    width: 100%;
+    z-index: 9999;
   }
 
   .dropdown-btn {
@@ -34,76 +38,64 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    cursor: pointer;
     font-weight: bold;
+    cursor: pointer;
   }
 
-  /* СПИСОК МОБОВ */
   #mob-list {
     display: none;
     max-height: 300px;
     overflow-y: auto;
     background: #1a1a1a;
-    border-bottom: 2px solid #333;
   }
   .open #mob-list { display: block; }
 
   .mob-item {
-    padding: 15px 20px;
-    border-top: 1px solid #2a2a2a;
+    padding: 15px;
+    border-top: 1px solid #333;
     display: flex;
     align-items: center;
-    font-size: 14px;
-    color: #ccc;
   }
 
   .add-new-btn {
     padding: 15px;
     text-align: center;
-    color: #ffffff;
     background: #222;
     font-weight: bold;
-    cursor: pointer;
+    color: #00ff00;
   }
 
-  /* КОНТЕНТНАЯ ОБЛАСТЬ */
-  .container {
+  /* Редактор */
+  .editor-container {
     display: flex;
     flex-direction: column;
     align-items: center;
-    width: 100%;
-    padding-bottom: 50px; /* Чтобы кнопки не перекрывали низ */
+    padding: 20px 0;
   }
 
   #capture-area {
-    background-color: #121212;
-    padding: 20px;
+    background: #121212;
     display: flex;
     flex-direction: column;
     align-items: center;
     width: 100%;
-    box-sizing: border-box;
   }
 
   #photo-preview {
-    width: 90vw;
-    max-width: 320px;
-    height: 90vw;
-    max-height: 320px;
+    width: 300px;
+    height: 300px;
     object-fit: cover;
     border-radius: 20px;
+    border: 3px solid #333;
     background: #1a1a1a;
-    border: 2px solid #333;
     margin-bottom: 20px;
   }
 
   #mobName {
-    font-family: inherit;
-    width: 90%;
-    max-width: 400px;
+    width: 85%;
     background: transparent;
     border: none;
-    border-bottom: 2px solid #333;
+    border-bottom: 2px solid #444;
     color: white;
     font-size: 24px;
     text-align: center;
@@ -113,139 +105,134 @@
   }
 
   #mobDesc {
-    font-family: inherit;
-    width: 90%;
-    max-width: 500px;
+    width: 85%;
     background: #1a1a1a;
     border: 2px solid #333;
     border-radius: 15px;
     color: #ddd;
     padding: 15px;
     font-size: 16px;
+    line-height: 1.5;
+    min-height: 200px;
     resize: none;
     outline: none;
-    box-sizing: border-box;
-    line-height: 1.5;
-    /* Текстовое поле будет расти само */
-    min-height: 150px;
-    overflow: hidden;
+    overflow: hidden; /* Будет расширяться скриптом */
   }
 
-  /* КНОПКИ ВНИЗУ */
+  /* Кнопки */
   .controls {
-    display: flex;
-    justify-content: center;
+    width: 90%;
+    margin-top: 30px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     gap: 10px;
-    padding: 20px;
-    width: 100%;
-    max-width: 500px;
-    box-sizing: border-box;
+    padding-bottom: 50px;
   }
 
   .btn {
-    flex: 1;
-    height: 60px;
+    padding: 20px 10px;
     border-radius: 15px;
     border: 2px solid #444;
-    font-family: inherit;
-    font-size: 14px;
-    font-weight: bold;
-    cursor: pointer;
     background: #1a1a1a;
-    color: #fff;
+    color: white;
+    font-weight: bold;
     text-transform: uppercase;
   }
 
-  .mini-thumb { 
-    width: 30px; height: 30px; border-radius: 6px; 
-    object-fit: cover; margin-right: 15px; background: #333;
+  .btn-refresh {
+    grid-column: span 2;
+    background: #222;
+    color: #aaa;
+    font-size: 12px;
+    border: 1px dashed #444;
   }
+
+  .mini-thumb { width: 35px; height: 35px; border-radius: 5px; margin-right: 15px; }
 </style>
 </head>
 <body>
 
-<div class="nav-header" id="navHeader">
+<div class="nav-header">
   <div class="dropdown-btn" onclick="toggleMenu()">
-    <span id="headerTitle">БЕСТИАРИЙ</span>
+    <span id="titleLabel">БЕСТИАРИЙ</span>
     <span>▼</span>
   </div>
   <div id="mob-list">
-    <div id="items-anchor"></div>
-    <div class="add-new-btn" onclick="createNew()">+ НОВАЯ ЗАПИСЬ</div>
+    <div id="list-items"></div>
+    <div class="add-new-btn" onclick="addNew()">+ СОЗДАТЬ НОВЫЙ ФАЙЛ</div>
   </div>
 </div>
 
-<div class="container">
+<div class="editor-container">
   <div id="capture-area">
-    <img id="photo-preview" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=" onclick="document.getElementById('fileInput').click()">
-    <input type="file" id="fileInput" accept="image/*" onchange="handleImg(event)" style="display:none">
+    <img id="photo-preview" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=" onclick="document.getElementById('fileIn').click()">
+    <input type="file" id="fileIn" accept="image/*" style="display:none" onchange="upload(event)">
 
-    <input type="text" id="mobName" placeholder="НАИМЕНОВАНИЕ..." oninput="save()">
-    <textarea id="mobDesc" placeholder="ХАРАКТЕРИСТИКА..." oninput="save(); autoHeight(this)"></textarea>
+    <input type="text" id="mobName" placeholder="ИМЯ..." oninput="autoSave()">
+    <textarea id="mobDesc" placeholder="ОПИСАНИЕ..." oninput="autoSave(); resize(this)"></textarea>
   </div>
 
   <div class="controls">
-    <button class="btn" onclick="exportImg()">СОХРАНИТЬ</button>
-    <button class="btn" onclick="removeFile()">УДАЛИТЬ</button>
+    <button class="btn" onclick="download()">СКАЧАТЬ PNG</button>
+    <button class="btn" onclick="remove()">УДАЛИТЬ ФАЙЛ</button>
+    <button class="btn btn-refresh" onclick="location.reload()">ОБНОВИТЬ СТРАНИЦУ ↻</button>
   </div>
 </div>
 
 <script>
-  let dataSet = [];
-  let current = 0;
-  const KEY = 'BESTIARY_SCROLL_V15';
-  const BLANK = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
+  let storage = [];
+  let currentId = 0;
+  const DB_NAME = 'BESTIARY_REVOLUTION_V16';
+  const EMPTY = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
 
   window.onload = () => {
-    const raw = localStorage.getItem(KEY);
-    if (raw) {
-      try { dataSet = JSON.parse(raw); } catch(e) { dataSet = []; }
-    }
-    if (!dataSet || dataSet.length === 0) dataSet = [{ name: "", desc: "", img: "" }];
+    const saved = localStorage.getItem(DB_NAME);
+    if (saved) storage = JSON.parse(saved);
+    if (storage.length === 0) storage = [{name: "", desc: "", img: ""}];
     
-    const savedIdx = localStorage.getItem('cur_idx');
-    current = (savedIdx && savedIdx < dataSet.length) ? parseInt(savedIdx) : 0;
+    currentId = parseInt(localStorage.getItem('active_id') || 0);
+    if (currentId >= storage.length) currentId = 0;
     
     load();
-    updateMenu();
+    renderMenu();
   };
 
-  function autoHeight(el) {
+  function resize(el) {
     el.style.height = 'auto';
     el.style.height = el.scrollHeight + 'px';
   }
 
   function load() {
-    const item = dataSet[current];
+    const item = storage[currentId];
     document.getElementById('mobName').value = item.name || "";
     document.getElementById('mobDesc').value = item.desc || "";
-    document.getElementById('photo-preview').src = item.img || BLANK;
-    document.getElementById('headerTitle').textContent = item.name.trim() || "БЕСТИАРИЙ";
-    localStorage.setItem('cur_idx', current);
-    autoHeight(document.getElementById('mobDesc'));
+    document.getElementById('photo-preview').src = item.img || EMPTY;
+    document.getElementById('titleLabel').textContent = item.name || "БЕСТИАРИЙ";
+    resize(document.getElementById('mobDesc'));
   }
 
-  function save() {
-    dataSet[current].name = document.getElementById('mobName').value;
-    dataSet[current].desc = document.getElementById('mobDesc').value;
-    document.getElementById('headerTitle').textContent = dataSet[current].name.trim() || "БЕСТИАРИЙ";
-    localStorage.setItem(KEY, JSON.stringify(dataSet));
-    updateMenu();
+  function autoSave() {
+    storage[currentId].name = document.getElementById('mobName').value;
+    storage[currentId].desc = document.getElementById('mobDesc').value;
+    document.getElementById('titleLabel').textContent = storage[currentId].name || "БЕСТИАРИЙ";
+    localStorage.setItem(DB_NAME, JSON.stringify(storage));
+    localStorage.setItem('active_id', currentId);
+    renderMenu();
   }
 
-  function updateMenu() {
-    const anchor = document.getElementById('items-anchor');
-    anchor.innerHTML = '';
-    dataSet.forEach((item, i) => {
+  function renderMenu() {
+    const container = document.getElementById('list-items');
+    container.innerHTML = '';
+    storage.forEach((item, i) => {
       const div = document.createElement('div');
       div.className = 'mob-item';
-      div.onclick = () => { current = i; load(); toggleMenu(); window.scrollTo(0,0); };
-      div.innerHTML = `<img src="${item.img || BLANK}" class="mini-thumb"> <span>${item.name || '(Пусто)'}</span>`;
-      anchor.appendChild(div);
+      div.onclick = () => { currentId = i; load(); toggleMenu(); window.scrollTo(0,0); };
+      div.innerHTML = `<img src="${item.img || EMPTY}" class="mini-thumb"> <span>${item.name || '---'}</span>`;
+      container.appendChild(div);
     });
   }
 
-  function handleImg(e) {
+  function upload(e) {
     const file = e.target.files[0];
     if (!file) return;
     const reader = new FileReader();
@@ -259,43 +246,42 @@
         else { if (h > max) { w *= max/h; h = max; } }
         canvas.width = w; canvas.height = h;
         canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-        dataSet[current].img = canvas.toDataURL('image/jpeg', 0.7);
-        document.getElementById('photo-preview').src = dataSet[current].img;
-        save();
+        storage[currentId].img = canvas.toDataURL('image/jpeg', 0.6);
+        document.getElementById('photo-preview').src = storage[currentId].img;
+        autoSave();
       };
       img.src = ev.target.result;
     };
     reader.readAsDataURL(file);
   }
 
-  function createNew() {
-    dataSet.push({ name: "", desc: "", img: "" });
-    current = dataSet.length - 1;
-    save();
+  function addNew() {
+    storage.push({name: "", desc: "", img: ""});
+    currentId = storage.length - 1;
+    autoSave();
     load();
     toggleMenu();
-    window.scrollTo(0,0);
   }
 
-  function removeFile() {
+  function remove() {
     if (confirm("УДАЛИТЬ ЭТОТ ФАЙЛ?")) {
-      dataSet.splice(current, 1);
-      if (dataSet.length === 0) dataSet = [{ name: "", desc: "", img: "" }];
-      current = 0;
-      localStorage.setItem(KEY, JSON.stringify(dataSet));
+      storage.splice(currentId, 1);
+      if (storage.length === 0) storage = [{name: "", desc: "", img: ""}];
+      currentId = 0;
+      autoSave();
       load();
-      updateMenu();
     }
   }
 
-  function toggleMenu() { document.getElementById('navHeader').classList.toggle('open'); }
+  function toggleMenu() { document.querySelector('#mob-list').style.display = 
+    document.querySelector('#mob-list').style.display === 'block' ? 'none' : 'block'; }
 
-  async function exportImg() {
+  function download() {
     const area = document.getElementById('capture-area');
-    html2canvas(area, { backgroundColor: "#121212", scale: 2, useCORS: true }).then(canvas => {
+    html2canvas(area, { backgroundColor: "#121212", scale: 2 }).then(canvas => {
       const link = document.createElement('a');
-      link.download = `${dataSet[current].name || 'creature'}.png`;
-      link.href = canvas.toDataURL("image/png");
+      link.download = 'creature.png';
+      link.href = canvas.toDataURL();
       link.click();
     });
   }
