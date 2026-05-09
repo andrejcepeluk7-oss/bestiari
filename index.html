@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Bestiary Pocket</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+  body {
+    font-family: -apple-system, system-ui, sans-serif;
+    background-color: #0c0c0c;
+    color: #ffffff;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  /* МЕНЮ */
+  .nav-header {
+    background: #161616;
+    border-bottom: 1px solid #2a2a2a;
+    z-index: 1000;
+  }
+
+  .dropdown-btn {
+    padding: 14px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    font-weight: 600;
+  }
+
+  #mob-list {
+    display: none;
+    max-height: 250px;
+    overflow-y: auto;
+    background: #161616;
+  }
+
+  .open #mob-list { display: block; }
+
+  .mob-item {
+    padding: 12px 20px;
+    border-top: 1px solid #222;
+    display: flex;
+    align-items: center;
+    font-size: 14px;
+  }
+
+  .add-new-btn {
+    padding: 12px;
+    text-align: center;
+    color: #4ec9b0;
+    background: #121c1a;
+    font-size: 13px;
+    font-weight: bold;
+    border-top: 1px solid #2a2a2a;
+  }
+
+  /* РЕДАКТОР */
+  .scroll-container {
+    flex-grow: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    padding-bottom: 20px;
+  }
+
+  #capture-area {
+    background-color: #0c0c0c;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  #photo-preview {
+    width: 90%;
+    max-width: 280px;
+    aspect-ratio: 1/1;
+    object-fit: cover;
+    border-radius: 16px;
+    background: #161616;
+    border: 1px solid #333;
+    margin-bottom: 15px;
+  }
+
+  #mobName {
+    width: 90%;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid #333;
+    color: white;
+    font-size: 20px;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 12px;
+    padding: 8px;
+    outline: none;
+  }
+
+  #mobDesc {
+    width: 90%;
+    background: #161616;
+    border: 1px solid #2a2a2a;
+    border-radius: 12px;
+    color: #bbb;
+    padding: 12px;
+    font-size: 14px;
+    resize: none;
+    outline: none;
+    box-sizing: border-box;
+    min-height: 120px;
+  }
+
+  /* КНОПКИ СБОКУ ДРУГ ОТ ДРУГА */
+  .controls {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    padding: 10px 20px 25px;
+  }
+
+  .btn {
+    flex: 1; /* Одинаковая ширина */
+    max-width: 150px; /* Но не слишком широкие */
+    height: 40px;
+    border-radius: 8px;
+    border: none;
+    font-weight: bold;
+    font-size: 12px;
+    text-transform: uppercase;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .btn-save { background-color: #fff; color: #000; }
+  .btn-delete { background-color: #2a1515; color: #ff5555; border: 1px solid #4a2222; }
+
+  .mini-thumb { width: 22px; height: 22px; border-radius: 4px; object-fit: cover; }
+</style>
+</head>
+<body>
+
+<div class="nav-header" id="navHeader">
+  <div class="dropdown-btn" onclick="toggleMenu()">
+    <span id="headerTitle">Выбрать моба</span>
+    <span style="font-size: 10px;">▼</span>
+  </div>
+  <div id="mob-list">
+    <div id="items-anchor"></div>
+    <div class="add-new-btn" onclick="createNew()">+ НОВЫЙ МОБ</div>
+  </div>
+</div>
+
+<div class="scroll-container">
+    <div id="capture-area">
+      <img id="photo-preview" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=" onclick="document.getElementById('fileInput').click()">
+      <input type="file" id="fileInput" accept="image/*" onchange="uploadImg(event)" style="display:none">
+
+      <input type="text" id="mobName" placeholder="Имя моба" oninput="syncData()">
+      <textarea id="mobDesc" placeholder="Характеристики..." oninput="syncData()"></textarea>
+    </div>
+
+    <div class="controls">
+      <button class="btn btn-save" onclick="downloadCard()">💾 Скрин</button>
+      <button class="btn btn-delete" onclick="deleteMob()">🗑️ Удалить</button>
+    </div>
+</div>
+
+<script>
+  let mobs = [];
+  let currentId = 0;
+
+  window.onload = function() {
+    const saved = localStorage.getItem('bestiary_v5');
+    if (saved) mobs = JSON.parse(saved);
+    if (mobs.length === 0) mobs.push({ name: "Новый моб", desc: "", img: "" });
+    loadMob(0);
+    refreshList();
+  };
+
+  function toggleMenu() { document.getElementById('navHeader').classList.toggle('open'); }
+
+  function refreshList() {
+    const anchor = document.getElementById('items-anchor');
+    anchor.innerHTML = '';
+    mobs.forEach((mob, index) => {
+      const div = document.createElement('div');
+      div.className = 'mob-item';
+      div.onclick = () => { loadMob(index); toggleMenu(); };
+      const thumb = mob.img || "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
+      div.innerHTML = `<img src="${thumb}" class="mini-thumb"> <span style="margin-left:10px">${mob.name || 'Без имени'}</span>`;
+      anchor.appendChild(div);
+    });
+  }
+
+  function loadMob(index) {
+    currentId = index;
+    const mob = mobs[index];
+    document.getElementById('mobName').value = mob.name || "";
+    document.getElementById('mobDesc').value = mob.desc || "";
+    document.getElementById('photo-preview').src = mob.img || "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
+    document.getElementById('headerTitle').textContent = mob.name || "Без имени";
+  }
+
+  function syncData() {
+    mobs[currentId].name = document.getElementById('mobName').value;
+    mobs[currentId].desc = document.getElementById('mobDesc').value;
+    document.getElementById('headerTitle').textContent = mobs[currentId].name || "Без имени";
+    localStorage.setItem('bestiary_v5', JSON.stringify(mobs));
+    refreshList();
+  }
+
+  function uploadImg(event) {
+    const reader = new FileReader();
+    reader.onload = function() {
+      mobs[currentId].img = reader.result;
+      document.getElementById('photo-preview').src = reader.result;
+      syncData();
+    };
+    if(event.target.files[0]) reader.readAsDataURL(event.target.files[0]);
+  }
+
+  function createNew() {
+    mobs.push({ name: "Новый моб", desc: "", img: "" });
+    loadMob(mobs.length - 1);
+    toggleMenu();
+    refreshList();
+  }
+
+  function deleteMob() {
+    if (confirm("Удалить?")) {
+      if (mobs.length <= 1) mobs[0] = { name: "Новый моб", desc: "", img: "" };
+      else { mobs.splice(currentId, 1); currentId = 0; }
+      loadMob(0); refreshList();
+      localStorage.setItem('bestiary_v5', JSON.stringify(mobs));
+    }
+  }
+
+  function downloadCard() {
+    const area = document.getElementById('capture-area');
+    html2canvas(area, { backgroundColor: "#0c0c0c", scale: 2 }).then(canvas => {
+      const link = document.createElement('a');
+      link.download = `${mobs[currentId].name || 'mob'}.png`;
+      link.href = canvas.toDataURL();
+      link.click();
+    });
+  }
+</script>
+</body>
+</html>
