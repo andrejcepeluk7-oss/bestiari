@@ -2,8 +2,9 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Bestiary Independent Files</title>
+<!-- БЛОКИРОВКА МАСШТАБИРОВАНИЯ: maximum-scale=1.0 и user-scalable=no -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Bestiary Fixed Zoom</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
   body {
@@ -14,10 +15,12 @@
     padding: 0;
     display: flex;
     flex-direction: column;
-    /* ИСПРАВЛЕНО: убрали блокировку высоты и скрытие скролла */
     min-height: 100vh;
     overflow-x: hidden;
     overflow-y: auto;
+    /* ЗАПРЕТ ЖЕСТОВ МАСШТАБИРОВАНИЯ на уровне CSS */
+    touch-action: pan-y; 
+    -webkit-text-size-adjust: 100%;
   }
 
   /* ШАПКА */
@@ -25,7 +28,7 @@
     background: #1a1a1a; 
     border-bottom: 1px solid #333; 
     z-index: 1000;
-    position: sticky; /* Чтобы шапка всегда была сверху при прокрутке */
+    position: sticky;
     top: 0;
   }
   .dropdown-btn { padding: 14px 20px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-weight: bold; }
@@ -53,7 +56,6 @@
   }
 
   /* РЕДАКТОР */
-  /* ИСПРАВЛЕНО: убрали жесткий flex, чтобы страница росла вниз */
   .scroll-container { 
     display: flex; 
     flex-direction: column; 
@@ -78,7 +80,7 @@
   }
 
   #mobName {
-    font-family: "Comic Sans MS", cursive;
+    font-family: inherit;
     width: 100%; max-width: 400px;
     background: transparent; border: none;
     border-bottom: 2px solid #333; color: white;
@@ -87,7 +89,7 @@
   }
 
   #mobDesc {
-    font-family: "Comic Sans MS", cursive;
+    font-family: inherit;
     width: 100%; max-width: 450px;
     background: #1a1a1a; border: 2px solid #333;
     border-radius: 15px; color: #ddd;
@@ -95,7 +97,6 @@
     resize: none; outline: none;
     box-sizing: border-box; line-height: 1.4;
     min-height: 200px;
-    /* ИСПРАВЛЕНО: textarea теперь не имеет внутреннего скролла, она расширяет страницу */
     overflow: hidden;
   }
 
@@ -104,7 +105,7 @@
   .btn {
     flex: 1; max-width: 170px; height: 60px;
     border-radius: 15px; border: 2px solid #444;
-    font-family: "Comic Sans MS", cursive; font-size: 18px; font-weight: bold;
+    font-family: inherit; font-size: 18px; font-weight: bold;
     cursor: pointer; background: #1a1a1a; color: #fff;
     text-transform: uppercase;
   }
@@ -162,7 +163,6 @@
     buildMenu();
   };
 
-  // ИСПРАВЛЕНО: Функция для авто-растягивания текстового поля
   function autoResize(el) {
     el.style.height = 'auto';
     el.style.height = el.scrollHeight + 'px';
