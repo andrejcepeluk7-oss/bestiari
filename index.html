@@ -2,38 +2,49 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Bestiary Mobile Scroll Fix</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bestiary Full Scroll Fix</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
-  body {
-    font-family: "Comic Sans MS", "Comic Sans", cursive, sans-serif;
-    background-color: #121212;
-    color: #ffffff;
+  /* БАЗОВЫЕ НАСТРОЙКИ */
+  html, body {
     margin: 0;
     padding: 0;
-    /* Разрешаем скролл на мобильных */
+    background-color: #121212;
+    color: #ffffff;
+    font-family: "Comic Sans MS", "Comic Sans", cursive, sans-serif;
+    /* Разрешаем скролл везде */
+    overflow-x: hidden;
     overflow-y: auto;
-    min-height: 100vh;
+    -webkit-overflow-scrolling: touch;
   }
 
-  /* ШАПКА - теперь она закреплена сверху */
-  .nav-header { 
-    background: #1a1a1a; 
-    border-bottom: 1px solid #333; 
+  /* ШАПКА - прилипает к верху */
+  .nav-header {
+    background: #1a1a1a;
+    border-bottom: 1px solid #333;
     position: sticky;
     top: 0;
     z-index: 1000;
+    width: 100%;
   }
-  
-  .dropdown-btn { padding: 14px 20px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-weight: bold; }
-  
-  #mob-list { 
-    display: none; 
-    max-height: 300px; 
-    overflow-y: auto; 
-    background: #1a1a1a; 
-    border-bottom: 2px solid #333; 
+
+  .dropdown-btn {
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    font-weight: bold;
+  }
+
+  /* СПИСОК МОБОВ */
+  #mob-list {
+    display: none;
+    max-height: 300px;
+    overflow-y: auto;
+    background: #1a1a1a;
+    border-bottom: 2px solid #333;
   }
   .open #mob-list { display: block; }
 
@@ -44,25 +55,24 @@
     align-items: center;
     font-size: 14px;
     color: #ccc;
-    cursor: pointer;
   }
 
   .add-new-btn {
     padding: 15px;
     text-align: center;
     color: #ffffff;
-    background: #282828;
+    background: #222;
     font-weight: bold;
     cursor: pointer;
-    border-top: 1px solid #444;
   }
 
-  /* КОНТЕНТ */
-  .main-content {
+  /* КОНТЕНТНАЯ ОБЛАСТЬ */
+  .container {
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding-bottom: 40px; /* Место под кнопками */
+    width: 100%;
+    padding-bottom: 50px; /* Чтобы кнопки не перекрывали низ */
   }
 
   #capture-area {
@@ -76,54 +86,79 @@
   }
 
   #photo-preview {
-    width: 280px; height: 280px;
-    object-fit: cover; border-radius: 20px;
-    background: #1a1a1a; border: 2px solid #333;
-    margin-bottom: 20px; display: block;
+    width: 90vw;
+    max-width: 320px;
+    height: 90vw;
+    max-height: 320px;
+    object-fit: cover;
+    border-radius: 20px;
+    background: #1a1a1a;
+    border: 2px solid #333;
+    margin-bottom: 20px;
   }
 
   #mobName {
-    font-family: "Comic Sans MS", cursive;
-    width: 90%; max-width: 400px;
-    background: transparent; border: none;
-    border-bottom: 2px solid #333; color: white;
-    font-size: 24px; text-align: center;
-    margin-bottom: 15px; padding: 10px; outline: none;
+    font-family: inherit;
+    width: 90%;
+    max-width: 400px;
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid #333;
+    color: white;
+    font-size: 24px;
+    text-align: center;
+    margin-bottom: 20px;
+    padding: 10px;
+    outline: none;
   }
 
   #mobDesc {
-    font-family: "Comic Sans MS", cursive;
-    width: 90%; max-width: 450px;
-    background: #1a1a1a; border: 2px solid #333;
-    border-radius: 15px; color: #ddd;
-    padding: 15px; font-size: 16px;
-    resize: none; outline: none;
-    box-sizing: border-box; line-height: 1.4;
-    min-height: 250px; /* Увеличил высоту для удобства */
-    overflow: hidden; /* Скроллится будет вся страница целиком */
+    font-family: inherit;
+    width: 90%;
+    max-width: 500px;
+    background: #1a1a1a;
+    border: 2px solid #333;
+    border-radius: 15px;
+    color: #ddd;
+    padding: 15px;
+    font-size: 16px;
+    resize: none;
+    outline: none;
+    box-sizing: border-box;
+    line-height: 1.5;
+    /* Текстовое поле будет расти само */
+    min-height: 150px;
+    overflow: hidden;
   }
 
-  /* КНОПКИ */
-  .controls { 
-    display: flex; 
-    justify-content: center; 
-    gap: 10px; 
-    padding: 20px; 
+  /* КНОПКИ ВНИЗУ */
+  .controls {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    padding: 20px;
     width: 100%;
+    max-width: 500px;
     box-sizing: border-box;
   }
-  
+
   .btn {
-    flex: 1; max-width: 170px; height: 60px;
-    border-radius: 15px; border: 2px solid #444;
-    font-family: "Comic Sans MS", cursive; font-size: 16px; font-weight: bold;
-    cursor: pointer; background: #1a1a1a; color: #fff;
+    flex: 1;
+    height: 60px;
+    border-radius: 15px;
+    border: 2px solid #444;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    background: #1a1a1a;
+    color: #fff;
     text-transform: uppercase;
   }
 
   .mini-thumb { 
-    width: 35px; height: 35px; border-radius: 6px; border: 1px solid #444; 
-    object-fit: cover; margin-right: 12px; background: #333; 
+    width: 30px; height: 30px; border-radius: 6px; 
+    object-fit: cover; margin-right: 15px; background: #333;
   }
 </style>
 </head>
@@ -136,87 +171,85 @@
   </div>
   <div id="mob-list">
     <div id="items-anchor"></div>
-    <div class="add-new-btn" onclick="createNewFile()">+ НОВАЯ ЗАПИСЬ</div>
+    <div class="add-new-btn" onclick="createNew()">+ НОВАЯ ЗАПИСЬ</div>
   </div>
 </div>
 
-<div class="main-content">
-    <div id="capture-area">
-      <img id="photo-preview" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=" onclick="document.getElementById('fileInput').click()">
-      <input type="file" id="fileInput" accept="image/*" onchange="handleImage(event)" style="display:none">
+<div class="container">
+  <div id="capture-area">
+    <img id="photo-preview" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=" onclick="document.getElementById('fileInput').click()">
+    <input type="file" id="fileInput" accept="image/*" onchange="handleImg(event)" style="display:none">
 
-      <input type="text" id="mobName" placeholder="НАИМЕНОВАНИЕ..." oninput="sync()">
-      <textarea id="mobDesc" placeholder="ХАРАКТЕРИСТИКА..." oninput="sync(); autoResize(this)"></textarea>
-    </div>
+    <input type="text" id="mobName" placeholder="НАИМЕНОВАНИЕ..." oninput="save()">
+    <textarea id="mobDesc" placeholder="ХАРАКТЕРИСТИКА..." oninput="save(); autoHeight(this)"></textarea>
+  </div>
 
-    <div class="controls">
-      <button class="btn" onclick="saveAsImage()">СОХРАНИТЬ</button>
-      <button class="btn" onclick="deleteFile()">УДАЛИТЬ</button>
-    </div>
+  <div class="controls">
+    <button class="btn" onclick="exportImg()">СОХРАНИТЬ</button>
+    <button class="btn" onclick="removeFile()">УДАЛИТЬ</button>
+  </div>
 </div>
 
 <script>
-  let db = [];
-  let currentIdx = 0;
-  const DB_KEY = 'BESTIARY_MOBILE_FINAL_V14';
+  let dataSet = [];
+  let current = 0;
+  const KEY = 'BESTIARY_SCROLL_V15';
   const BLANK = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
 
   window.onload = () => {
-    const data = localStorage.getItem(DB_KEY);
-    if (data) {
-      try { db = JSON.parse(data); } catch(e) { db = []; }
+    const raw = localStorage.getItem(KEY);
+    if (raw) {
+      try { dataSet = JSON.parse(raw); } catch(e) { dataSet = []; }
     }
-    if (!db || db.length === 0) db = [{ name: "", desc: "", img: "" }];
+    if (!dataSet || dataSet.length === 0) dataSet = [{ name: "", desc: "", img: "" }];
     
-    const savedIdx = localStorage.getItem('active_idx');
-    currentIdx = (savedIdx && savedIdx < db.length) ? parseInt(savedIdx) : 0;
+    const savedIdx = localStorage.getItem('cur_idx');
+    current = (savedIdx && savedIdx < dataSet.length) ? parseInt(savedIdx) : 0;
     
-    render();
-    buildMenu();
+    load();
+    updateMenu();
   };
 
-  // Автоматическое увеличение высоты текстового поля
-  function autoResize(textarea) {
-    textarea.style.height = 'auto';
-    textarea.style.height = textarea.scrollHeight + 'px';
+  function autoHeight(el) {
+    el.style.height = 'auto';
+    el.style.height = el.scrollHeight + 'px';
   }
 
-  function render() {
-    const file = db[currentIdx];
-    document.getElementById('mobName').value = file.name || "";
-    document.getElementById('mobDesc').value = file.desc || "";
-    document.getElementById('photo-preview').src = file.img || BLANK;
-    document.getElementById('headerTitle').textContent = file.name.trim() || "БЕСТИАРИЙ";
-    localStorage.setItem('active_idx', currentIdx);
-    autoResize(document.getElementById('mobDesc'));
+  function load() {
+    const item = dataSet[current];
+    document.getElementById('mobName').value = item.name || "";
+    document.getElementById('mobDesc').value = item.desc || "";
+    document.getElementById('photo-preview').src = item.img || BLANK;
+    document.getElementById('headerTitle').textContent = item.name.trim() || "БЕСТИАРИЙ";
+    localStorage.setItem('cur_idx', current);
+    autoHeight(document.getElementById('mobDesc'));
   }
 
-  function sync() {
-    db[currentIdx].name = document.getElementById('mobName').value;
-    db[currentIdx].desc = document.getElementById('mobDesc').value;
-    document.getElementById('headerTitle').textContent = db[currentIdx].name.trim() || "БЕСТИАРИЙ";
-    localStorage.setItem(DB_KEY, JSON.stringify(db));
-    buildMenu();
+  function save() {
+    dataSet[current].name = document.getElementById('mobName').value;
+    dataSet[current].desc = document.getElementById('mobDesc').value;
+    document.getElementById('headerTitle').textContent = dataSet[current].name.trim() || "БЕСТИАРИЙ";
+    localStorage.setItem(KEY, JSON.stringify(dataSet));
+    updateMenu();
   }
 
-  function buildMenu() {
+  function updateMenu() {
     const anchor = document.getElementById('items-anchor');
     anchor.innerHTML = '';
-    db.forEach((item, i) => {
+    dataSet.forEach((item, i) => {
       const div = document.createElement('div');
       div.className = 'mob-item';
-      div.onclick = () => { currentIdx = i; render(); toggleMenu(); window.scrollTo(0,0); };
-      const img = item.img || BLANK;
-      div.innerHTML = `<img src="${img}" class="mini-thumb"> <span>${item.name || '(Без названия)'}</span>`;
+      div.onclick = () => { current = i; load(); toggleMenu(); window.scrollTo(0,0); };
+      div.innerHTML = `<img src="${item.img || BLANK}" class="mini-thumb"> <span>${item.name || '(Пусто)'}</span>`;
       anchor.appendChild(div);
     });
   }
 
-  function handleImage(e) {
+  function handleImg(e) {
     const file = e.target.files[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = (event) => {
+    reader.onload = (ev) => {
       const img = new Image();
       img.onload = () => {
         const canvas = document.createElement('canvas');
@@ -226,42 +259,42 @@
         else { if (h > max) { w *= max/h; h = max; } }
         canvas.width = w; canvas.height = h;
         canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-        db[currentIdx].img = canvas.toDataURL('image/jpeg', 0.7);
-        document.getElementById('photo-preview').src = db[currentIdx].img;
-        sync();
+        dataSet[current].img = canvas.toDataURL('image/jpeg', 0.7);
+        document.getElementById('photo-preview').src = dataSet[current].img;
+        save();
       };
-      img.src = event.target.result;
+      img.src = ev.target.result;
     };
     reader.readAsDataURL(file);
   }
 
-  function createNewFile() {
-    db.push({ name: "", desc: "", img: "" });
-    currentIdx = db.length - 1;
-    sync();
-    render();
+  function createNew() {
+    dataSet.push({ name: "", desc: "", img: "" });
+    current = dataSet.length - 1;
+    save();
+    load();
     toggleMenu();
     window.scrollTo(0,0);
   }
 
-  function deleteFile() {
-    if (confirm("УДАЛИТЬ ФАЙЛ?")) {
-      db.splice(currentIdx, 1);
-      if (db.length === 0) db = [{ name: "", desc: "", img: "" }];
-      currentIdx = 0;
-      localStorage.setItem(DB_KEY, JSON.stringify(db));
-      render();
-      buildMenu();
+  function removeFile() {
+    if (confirm("УДАЛИТЬ ЭТОТ ФАЙЛ?")) {
+      dataSet.splice(current, 1);
+      if (dataSet.length === 0) dataSet = [{ name: "", desc: "", img: "" }];
+      current = 0;
+      localStorage.setItem(KEY, JSON.stringify(dataSet));
+      load();
+      updateMenu();
     }
   }
 
   function toggleMenu() { document.getElementById('navHeader').classList.toggle('open'); }
 
-  async function saveAsImage() {
+  async function exportImg() {
     const area = document.getElementById('capture-area');
     html2canvas(area, { backgroundColor: "#121212", scale: 2, useCORS: true }).then(canvas => {
       const link = document.createElement('a');
-      link.download = `${db[currentIdx].name || 'creature'}.png`;
+      link.download = `${dataSet[current].name || 'creature'}.png`;
       link.href = canvas.toDataURL("image/png");
       link.click();
     });
