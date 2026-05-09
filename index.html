@@ -3,78 +3,61 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Bestiary Natural Scroll</title>
+<title>Bestiary Independent Files</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
-  /* ПОЛНАЯ СВОБОДА СКРОЛЛА */
-  html, body {
-    margin: 0;
-    padding: 0;
+  body {
+    font-family: "Comic Sans MS", "Comic Sans", cursive, sans-serif;
     background-color: #121212;
     color: #ffffff;
-    font-family: "Comic Sans MS", cursive, sans-serif;
-    /* Убираем любые ограничения по высоте */
-    height: auto !important;
-    min-height: 100%;
-    /* Включаем стандартное поведение прокрутки */
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    /* ИСПРАВЛЕНО: убрали блокировку высоты и скрытие скролла */
+    min-height: 100vh;
     overflow-x: hidden;
-    overflow-y: visible !important;
-    -webkit-overflow-scrolling: touch;
-    touch-action: auto !important;
+    overflow-y: auto;
   }
 
   /* ШАПКА */
-  .nav-header {
-    background: #1a1a1a;
-    border-bottom: 2px solid #333;
-    width: 100%;
-    /* Sticky не блокирует скролл так, как fixed */
-    position: sticky;
+  .nav-header { 
+    background: #1a1a1a; 
+    border-bottom: 1px solid #333; 
+    z-index: 1000;
+    position: sticky; /* Чтобы шапка всегда была сверху при прокрутке */
     top: 0;
-    z-index: 100;
   }
-
-  .dropdown-btn {
-    padding: 15px 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    cursor: pointer;
-    font-weight: bold;
-  }
-
-  #mob-list {
-    display: none;
-    max-height: 300px;
-    overflow-y: auto;
-    background: #1a1a1a;
-    border-bottom: 2px solid #444;
-  }
+  .dropdown-btn { padding: 14px 20px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-weight: bold; }
+  #mob-list { display: none; max-height: 250px; overflow-y: auto; background: #1a1a1a; border-bottom: 2px solid #333; }
+  .open #mob-list { display: block; }
 
   .mob-item {
-    padding: 15px 20px;
-    border-top: 1px solid #333;
+    padding: 12px 20px;
+    border-top: 1px solid #2a2a2a;
     display: flex;
     align-items: center;
+    font-size: 14px;
+    color: #ccc;
     cursor: pointer;
   }
 
   .add-new-btn {
     padding: 15px;
     text-align: center;
-    background: #222;
-    color: #4caf50;
+    color: #ffffff;
+    background: #282828;
     font-weight: bold;
     cursor: pointer;
+    border-top: 1px solid #444;
   }
 
-  /* КОНТЕНТ */
-  .main-wrap {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+  /* РЕДАКТОР */
+  /* ИСПРАВЛЕНО: убрали жесткий flex, чтобы страница росла вниз */
+  .scroll-container { 
+    display: flex; 
+    flex-direction: column; 
     width: 100%;
-    padding-bottom: 60px;
   }
 
   #capture-area {
@@ -88,210 +71,186 @@
   }
 
   #photo-preview {
-    width: 280px;
-    height: 280px;
-    object-fit: cover;
-    border-radius: 20px;
-    background: #1a1a1a;
-    border: 2px solid #333;
-    margin-bottom: 20px;
+    width: 280px; height: 280px;
+    object-fit: cover; border-radius: 20px;
+    background: #1a1a1a; border: 2px solid #333;
+    margin-bottom: 20px; display: block;
   }
 
   #mobName {
-    font-family: inherit;
-    width: 90%;
-    max-width: 400px;
-    background: transparent;
-    border: none;
-    border-bottom: 2px solid #444;
-    color: white;
-    font-size: 24px;
-    text-align: center;
-    margin-bottom: 20px;
-    padding: 10px;
-    outline: none;
+    font-family: "Comic Sans MS", cursive;
+    width: 100%; max-width: 400px;
+    background: transparent; border: none;
+    border-bottom: 2px solid #333; color: white;
+    font-size: 24px; text-align: center;
+    margin-bottom: 15px; padding: 8px; outline: none;
   }
 
   #mobDesc {
-    font-family: inherit;
-    width: 90%;
-    max-width: 500px;
-    background: #1a1a1a;
-    border: 2px solid #333;
-    border-radius: 15px;
-    color: #ddd;
-    padding: 15px;
-    font-size: 16px;
-    line-height: 1.5;
-    min-height: 150px;
-    resize: none;
-    outline: none;
-    /* Текстовое поле будет расти, чтобы не скроллить внутри него */
+    font-family: "Comic Sans MS", cursive;
+    width: 100%; max-width: 450px;
+    background: #1a1a1a; border: 2px solid #333;
+    border-radius: 15px; color: #ddd;
+    padding: 15px; font-size: 16px;
+    resize: none; outline: none;
+    box-sizing: border-box; line-height: 1.4;
+    min-height: 200px;
+    /* ИСПРАВЛЕНО: textarea теперь не имеет внутреннего скролла, она расширяет страницу */
     overflow: hidden;
   }
 
   /* КНОПКИ */
-  .controls {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    width: 90%;
-    max-width: 400px;
-    margin-top: 20px;
-  }
-
+  .controls { display: flex; justify-content: center; gap: 15px; padding: 20px; background: #121212; padding-bottom: 60px; }
   .btn {
-    width: 100%;
-    padding: 18px;
-    border-radius: 12px;
-    border: 2px solid #444;
-    background: #1a1a1a;
-    color: white;
-    font-size: 16px;
-    font-weight: bold;
+    flex: 1; max-width: 170px; height: 60px;
+    border-radius: 15px; border: 2px solid #444;
+    font-family: "Comic Sans MS", cursive; font-size: 18px; font-weight: bold;
+    cursor: pointer; background: #1a1a1a; color: #fff;
     text-transform: uppercase;
-    cursor: pointer;
   }
+  .btn:active { background: #333; }
 
   .mini-thumb { 
-    width: 35px; height: 35px; border-radius: 6px; 
-    object-fit: cover; margin-right: 15px; background: #333;
+    width: 32px; height: 32px; border-radius: 6px; border: 1px solid #444; 
+    object-fit: cover; margin-right: 12px; background: #333; 
   }
 </style>
 </head>
 <body>
 
-<div class="nav-header">
+<div class="nav-header" id="navHeader">
   <div class="dropdown-btn" onclick="toggleMenu()">
-    <span id="currentName">БЕСТИАРИЙ</span>
+    <span id="headerTitle">БЕСТИАРИЙ</span>
     <span>▼</span>
   </div>
   <div id="mob-list">
-    <div id="list-items"></div>
-    <div class="add-new-btn" onclick="createNew()">+ НОВАЯ ЗАПИСЬ</div>
+    <div id="items-anchor"></div>
+    <div class="add-new-btn" onclick="createNewFile()">+ НОВАЯ ЗАПИСЬ</div>
   </div>
 </div>
 
-<div class="main-wrap">
-  <div id="capture-area">
-    <img id="photo-preview" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=" onclick="document.getElementById('fileIn').click()">
-    <input type="file" id="fileIn" accept="image/*" style="display:none" onchange="upload(event)">
+<div class="scroll-container">
+    <div id="capture-area">
+      <img id="photo-preview" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=" onclick="document.getElementById('fileInput').click()">
+      <input type="file" id="fileInput" accept="image/*" onchange="handleImage(event)" style="display:none">
 
-    <input type="text" id="mobName" placeholder="НАЗВАНИЕ..." oninput="save()">
-    <textarea id="mobDesc" placeholder="ОПИСАНИЕ..." oninput="save(); fixHeight(this)"></textarea>
-  </div>
+      <input type="text" id="mobName" placeholder="НАИМЕНОВАНИЕ..." oninput="syncData()">
+      <textarea id="mobDesc" placeholder="ХАРАКТЕРИСТИКА..." oninput="syncData(); autoResize(this)"></textarea>
+    </div>
 
-  <div class="controls">
-    <button class="btn" style="border-color: #444;" onclick="downloadPng()">СКАЧАТЬ PNG</button>
-    <button class="btn" style="border-color: #600;" onclick="deleteFile()">УДАЛИТЬ ФАЙЛ</button>
-  </div>
+    <div class="controls">
+      <button class="btn" onclick="saveAsImage()">СОХРАНИТЬ</button>
+      <button class="btn" onclick="deleteFile()">УДАЛИТЬ</button>
+    </div>
 </div>
 
 <script>
   let db = [];
-  let current = 0;
-  const DB_KEY = 'BESTIARY_FREE_SCROLL_V17';
+  let currentIdx = 0;
+  const DB_KEY = 'BESTIARY_ISOLATED_V13';
   const BLANK = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
 
   window.onload = () => {
-    const saved = localStorage.getItem(DB_KEY);
-    if (saved) db = JSON.parse(saved);
-    if (!db || db.length === 0) db = [{name: "", desc: "", img: ""}];
+    const data = localStorage.getItem(DB_KEY);
+    if (data) { db = JSON.parse(data); }
+    if (!db || db.length === 0) { db = [{ name: "", desc: "", img: "" }]; }
     
-    current = parseInt(localStorage.getItem('active_idx') || 0);
-    if (current >= db.length) current = 0;
+    const savedIdx = localStorage.getItem('active_idx');
+    currentIdx = (savedIdx && savedIdx < db.length) ? parseInt(savedIdx) : 0;
     
     render();
     buildMenu();
   };
 
-  function fixHeight(el) {
+  // ИСПРАВЛЕНО: Функция для авто-растягивания текстового поля
+  function autoResize(el) {
     el.style.height = 'auto';
     el.style.height = el.scrollHeight + 'px';
   }
 
   function render() {
-    const item = db[current];
-    document.getElementById('mobName').value = item.name || "";
-    document.getElementById('mobDesc').value = item.desc || "";
-    document.getElementById('photo-preview').src = item.img || BLANK;
-    document.getElementById('currentName').textContent = item.name || "БЕСТИАРИЙ";
-    fixHeight(document.getElementById('mobDesc'));
+    const file = db[currentIdx];
+    document.getElementById('mobName').value = file.name || "";
+    document.getElementById('mobDesc').value = file.desc || "";
+    document.getElementById('photo-preview').src = file.img || BLANK;
+    document.getElementById('headerTitle').textContent = file.name.trim() || "БЕСТИАРИЙ";
+    localStorage.setItem('active_idx', currentIdx);
+    autoResize(document.getElementById('mobDesc'));
   }
 
-  function save() {
-    db[current].name = document.getElementById('mobName').value;
-    db[current].desc = document.getElementById('mobDesc').value;
-    document.getElementById('currentName').textContent = db[current].name || "БЕСТИАРИЙ";
+  function syncData() {
+    db[currentIdx].name = document.getElementById('mobName').value;
+    db[currentIdx].desc = document.getElementById('mobDesc').value;
+    document.getElementById('headerTitle').textContent = db[currentIdx].name.trim() || "БЕСТИАРИЙ";
     localStorage.setItem(DB_KEY, JSON.stringify(db));
-    localStorage.setItem('active_idx', current);
     buildMenu();
   }
 
   function buildMenu() {
-    const list = document.getElementById('list-items');
-    list.innerHTML = '';
+    const anchor = document.getElementById('items-anchor');
+    anchor.innerHTML = '';
     db.forEach((item, i) => {
-      const d = document.createElement('div');
-      d.className = 'mob-item';
-      d.onclick = () => { current = i; render(); toggleMenu(); window.scrollTo(0,0); };
-      d.innerHTML = `<img src="${item.img || BLANK}" class="mini-thumb"> <span>${item.name || '(Пусто)'}</span>`;
-      list.appendChild(d);
+      const div = document.createElement('div');
+      div.className = 'mob-item';
+      div.onclick = () => { currentIdx = i; render(); toggleMenu(); window.scrollTo(0,0); };
+      const img = item.img || BLANK;
+      div.innerHTML = `<img src="${img}" class="mini-thumb"> <span>${item.name || '(Пусто)'}</span>`;
+      anchor.appendChild(div);
     });
   }
 
-  function upload(e) {
+  function handleImage(e) {
     const file = e.target.files[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = (ev) => {
+    reader.onload = (event) => {
       const img = new Image();
       img.onload = () => {
-        const cvs = document.createElement('canvas');
+        const canvas = document.createElement('canvas');
         const max = 600;
         let w = img.width, h = img.height;
         if (w > h) { if (w > max) { h *= max/w; w = max; } }
         else { if (h > max) { w *= max/h; h = max; } }
-        cvs.width = w; cvs.height = h;
-        cvs.getContext('2d').drawImage(img, 0, 0, w, h);
-        db[current].img = cvs.toDataURL('image/jpeg', 0.7);
-        document.getElementById('photo-preview').src = db[current].img;
-        save();
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        db[currentIdx].img = canvas.toDataURL('image/jpeg', 0.7);
+        document.getElementById('photo-preview').src = db[currentIdx].img;
+        syncData();
       };
-      img.src = ev.target.result;
+      img.src = event.target.result;
     };
     reader.readAsDataURL(file);
   }
 
-  function createNew() {
-    db.push({name: "", desc: "", img: ""});
-    current = db.length - 1;
-    save();
+  function createNewFile() {
+    db.push({ name: "", desc: "", img: "" });
+    currentIdx = db.length - 1;
+    localStorage.setItem(DB_KEY, JSON.stringify(db));
     render();
-    toggleMenu();
+    buildMenu();
+    if(document.getElementById('navHeader').classList.contains('open')) toggleMenu();
+    window.scrollTo(0,0);
   }
 
   function deleteFile() {
-    if (confirm("ТОЧНО УДАЛИТЬ?")) {
-      db.splice(current, 1);
-      if (db.length === 0) db = [{name: "", desc: "", img: ""}];
-      current = 0;
-      save();
+    if (confirm("УДАЛИТЬ ЭТОТ ФАЙЛ?")) {
+      db.splice(currentIdx, 1);
+      if (db.length === 0) db = [{ name: "", desc: "", img: "" }];
+      currentIdx = 0;
+      localStorage.setItem(DB_KEY, JSON.stringify(db));
       render();
+      buildMenu();
     }
   }
 
-  function toggleMenu() {
-    const m = document.getElementById('mob-list');
-    m.style.display = (m.style.display === 'block') ? 'none' : 'block';
-  }
+  function toggleMenu() { document.getElementById('navHeader').classList.toggle('open'); }
 
-  function downloadPng() {
+  async function saveAsImage() {
     const area = document.getElementById('capture-area');
     html2canvas(area, { backgroundColor: "#121212", scale: 2 }).then(canvas => {
       const link = document.createElement('a');
-      link.download = (db[current].name || 'creature') + '.png';
-      link.href = canvas.toDataURL();
+      link.download = `${db[currentIdx].name || 'creature'}.png`;
+      link.href = canvas.toDataURL("image/png");
       link.click();
     });
   }
