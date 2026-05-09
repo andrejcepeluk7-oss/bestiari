@@ -2,35 +2,36 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-<title>Bestiary Scroll Fixed</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bestiary Natural Scroll</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
-  /* Максимально открываем скролл */
-  html {
-    overflow-y: auto !important;
-    height: auto !important;
-  }
-  
-  body {
+  /* ПОЛНАЯ СВОБОДА СКРОЛЛА */
+  html, body {
     margin: 0;
     padding: 0;
     background-color: #121212;
     color: #ffffff;
     font-family: "Comic Sans MS", cursive, sans-serif;
-    /* Принудительный вертикальный скролл для сенсоров */
-    touch-action: pan-y !important;
+    /* Убираем любые ограничения по высоте */
+    height: auto !important;
+    min-height: 100%;
+    /* Включаем стандартное поведение прокрутки */
+    overflow-x: hidden;
+    overflow-y: visible !important;
     -webkit-overflow-scrolling: touch;
-    min-height: 101vh; /* Чуть больше экрана, чтобы скролл был всегда активен */
+    touch-action: auto !important;
   }
 
-  /* Навигация */
+  /* ШАПКА */
   .nav-header {
     background: #1a1a1a;
     border-bottom: 2px solid #333;
+    width: 100%;
+    /* Sticky не блокирует скролл так, как fixed */
     position: sticky;
     top: 0;
-    z-index: 9999;
+    z-index: 100;
   }
 
   .dropdown-btn {
@@ -38,8 +39,8 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-weight: bold;
     cursor: pointer;
+    font-weight: bold;
   }
 
   #mob-list {
@@ -47,52 +48,59 @@
     max-height: 300px;
     overflow-y: auto;
     background: #1a1a1a;
+    border-bottom: 2px solid #444;
   }
-  .open #mob-list { display: block; }
 
   .mob-item {
-    padding: 15px;
+    padding: 15px 20px;
     border-top: 1px solid #333;
     display: flex;
     align-items: center;
+    cursor: pointer;
   }
 
   .add-new-btn {
     padding: 15px;
     text-align: center;
     background: #222;
+    color: #4caf50;
     font-weight: bold;
-    color: #00ff00;
+    cursor: pointer;
   }
 
-  /* Редактор */
-  .editor-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 20px 0;
-  }
-
-  #capture-area {
-    background: #121212;
+  /* КОНТЕНТ */
+  .main-wrap {
     display: flex;
     flex-direction: column;
     align-items: center;
     width: 100%;
+    padding-bottom: 60px;
+  }
+
+  #capture-area {
+    background-color: #121212;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    box-sizing: border-box;
   }
 
   #photo-preview {
-    width: 300px;
-    height: 300px;
+    width: 280px;
+    height: 280px;
     object-fit: cover;
     border-radius: 20px;
-    border: 3px solid #333;
     background: #1a1a1a;
+    border: 2px solid #333;
     margin-bottom: 20px;
   }
 
   #mobName {
-    width: 85%;
+    font-family: inherit;
+    width: 90%;
+    max-width: 400px;
     background: transparent;
     border: none;
     border-bottom: 2px solid #444;
@@ -105,7 +113,9 @@
   }
 
   #mobDesc {
-    width: 85%;
+    font-family: inherit;
+    width: 90%;
+    max-width: 500px;
     background: #1a1a1a;
     border: 2px solid #333;
     border-radius: 15px;
@@ -113,122 +123,120 @@
     padding: 15px;
     font-size: 16px;
     line-height: 1.5;
-    min-height: 200px;
+    min-height: 150px;
     resize: none;
     outline: none;
-    overflow: hidden; /* Будет расширяться скриптом */
+    /* Текстовое поле будет расти, чтобы не скроллить внутри него */
+    overflow: hidden;
   }
 
-  /* Кнопки */
+  /* КНОПКИ */
   .controls {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
     width: 90%;
-    margin-top: 30px;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    padding-bottom: 50px;
+    max-width: 400px;
+    margin-top: 20px;
   }
 
   .btn {
-    padding: 20px 10px;
-    border-radius: 15px;
+    width: 100%;
+    padding: 18px;
+    border-radius: 12px;
     border: 2px solid #444;
     background: #1a1a1a;
     color: white;
+    font-size: 16px;
     font-weight: bold;
     text-transform: uppercase;
+    cursor: pointer;
   }
 
-  .btn-refresh {
-    grid-column: span 2;
-    background: #222;
-    color: #aaa;
-    font-size: 12px;
-    border: 1px dashed #444;
+  .mini-thumb { 
+    width: 35px; height: 35px; border-radius: 6px; 
+    object-fit: cover; margin-right: 15px; background: #333;
   }
-
-  .mini-thumb { width: 35px; height: 35px; border-radius: 5px; margin-right: 15px; }
 </style>
 </head>
 <body>
 
 <div class="nav-header">
   <div class="dropdown-btn" onclick="toggleMenu()">
-    <span id="titleLabel">БЕСТИАРИЙ</span>
+    <span id="currentName">БЕСТИАРИЙ</span>
     <span>▼</span>
   </div>
   <div id="mob-list">
     <div id="list-items"></div>
-    <div class="add-new-btn" onclick="addNew()">+ СОЗДАТЬ НОВЫЙ ФАЙЛ</div>
+    <div class="add-new-btn" onclick="createNew()">+ НОВАЯ ЗАПИСЬ</div>
   </div>
 </div>
 
-<div class="editor-container">
+<div class="main-wrap">
   <div id="capture-area">
     <img id="photo-preview" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=" onclick="document.getElementById('fileIn').click()">
     <input type="file" id="fileIn" accept="image/*" style="display:none" onchange="upload(event)">
 
-    <input type="text" id="mobName" placeholder="ИМЯ..." oninput="autoSave()">
-    <textarea id="mobDesc" placeholder="ОПИСАНИЕ..." oninput="autoSave(); resize(this)"></textarea>
+    <input type="text" id="mobName" placeholder="НАЗВАНИЕ..." oninput="save()">
+    <textarea id="mobDesc" placeholder="ОПИСАНИЕ..." oninput="save(); fixHeight(this)"></textarea>
   </div>
 
   <div class="controls">
-    <button class="btn" onclick="download()">СКАЧАТЬ PNG</button>
-    <button class="btn" onclick="remove()">УДАЛИТЬ ФАЙЛ</button>
-    <button class="btn btn-refresh" onclick="location.reload()">ОБНОВИТЬ СТРАНИЦУ ↻</button>
+    <button class="btn" style="border-color: #444;" onclick="downloadPng()">СКАЧАТЬ PNG</button>
+    <button class="btn" style="border-color: #600;" onclick="deleteFile()">УДАЛИТЬ ФАЙЛ</button>
   </div>
 </div>
 
 <script>
-  let storage = [];
-  let currentId = 0;
-  const DB_NAME = 'BESTIARY_REVOLUTION_V16';
-  const EMPTY = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
+  let db = [];
+  let current = 0;
+  const DB_KEY = 'BESTIARY_FREE_SCROLL_V17';
+  const BLANK = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
 
   window.onload = () => {
-    const saved = localStorage.getItem(DB_NAME);
-    if (saved) storage = JSON.parse(saved);
-    if (storage.length === 0) storage = [{name: "", desc: "", img: ""}];
+    const saved = localStorage.getItem(DB_KEY);
+    if (saved) db = JSON.parse(saved);
+    if (!db || db.length === 0) db = [{name: "", desc: "", img: ""}];
     
-    currentId = parseInt(localStorage.getItem('active_id') || 0);
-    if (currentId >= storage.length) currentId = 0;
+    current = parseInt(localStorage.getItem('active_idx') || 0);
+    if (current >= db.length) current = 0;
     
-    load();
-    renderMenu();
+    render();
+    buildMenu();
   };
 
-  function resize(el) {
+  function fixHeight(el) {
     el.style.height = 'auto';
     el.style.height = el.scrollHeight + 'px';
   }
 
-  function load() {
-    const item = storage[currentId];
+  function render() {
+    const item = db[current];
     document.getElementById('mobName').value = item.name || "";
     document.getElementById('mobDesc').value = item.desc || "";
-    document.getElementById('photo-preview').src = item.img || EMPTY;
-    document.getElementById('titleLabel').textContent = item.name || "БЕСТИАРИЙ";
-    resize(document.getElementById('mobDesc'));
+    document.getElementById('photo-preview').src = item.img || BLANK;
+    document.getElementById('currentName').textContent = item.name || "БЕСТИАРИЙ";
+    fixHeight(document.getElementById('mobDesc'));
   }
 
-  function autoSave() {
-    storage[currentId].name = document.getElementById('mobName').value;
-    storage[currentId].desc = document.getElementById('mobDesc').value;
-    document.getElementById('titleLabel').textContent = storage[currentId].name || "БЕСТИАРИЙ";
-    localStorage.setItem(DB_NAME, JSON.stringify(storage));
-    localStorage.setItem('active_id', currentId);
-    renderMenu();
+  function save() {
+    db[current].name = document.getElementById('mobName').value;
+    db[current].desc = document.getElementById('mobDesc').value;
+    document.getElementById('currentName').textContent = db[current].name || "БЕСТИАРИЙ";
+    localStorage.setItem(DB_KEY, JSON.stringify(db));
+    localStorage.setItem('active_idx', current);
+    buildMenu();
   }
 
-  function renderMenu() {
-    const container = document.getElementById('list-items');
-    container.innerHTML = '';
-    storage.forEach((item, i) => {
-      const div = document.createElement('div');
-      div.className = 'mob-item';
-      div.onclick = () => { currentId = i; load(); toggleMenu(); window.scrollTo(0,0); };
-      div.innerHTML = `<img src="${item.img || EMPTY}" class="mini-thumb"> <span>${item.name || '---'}</span>`;
-      container.appendChild(div);
+  function buildMenu() {
+    const list = document.getElementById('list-items');
+    list.innerHTML = '';
+    db.forEach((item, i) => {
+      const d = document.createElement('div');
+      d.className = 'mob-item';
+      d.onclick = () => { current = i; render(); toggleMenu(); window.scrollTo(0,0); };
+      d.innerHTML = `<img src="${item.img || BLANK}" class="mini-thumb"> <span>${item.name || '(Пусто)'}</span>`;
+      list.appendChild(d);
     });
   }
 
@@ -239,48 +247,50 @@
     reader.onload = (ev) => {
       const img = new Image();
       img.onload = () => {
-        const canvas = document.createElement('canvas');
+        const cvs = document.createElement('canvas');
         const max = 600;
         let w = img.width, h = img.height;
         if (w > h) { if (w > max) { h *= max/w; w = max; } }
         else { if (h > max) { w *= max/h; h = max; } }
-        canvas.width = w; canvas.height = h;
-        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-        storage[currentId].img = canvas.toDataURL('image/jpeg', 0.6);
-        document.getElementById('photo-preview').src = storage[currentId].img;
-        autoSave();
+        cvs.width = w; cvs.height = h;
+        cvs.getContext('2d').drawImage(img, 0, 0, w, h);
+        db[current].img = cvs.toDataURL('image/jpeg', 0.7);
+        document.getElementById('photo-preview').src = db[current].img;
+        save();
       };
       img.src = ev.target.result;
     };
     reader.readAsDataURL(file);
   }
 
-  function addNew() {
-    storage.push({name: "", desc: "", img: ""});
-    currentId = storage.length - 1;
-    autoSave();
-    load();
+  function createNew() {
+    db.push({name: "", desc: "", img: ""});
+    current = db.length - 1;
+    save();
+    render();
     toggleMenu();
   }
 
-  function remove() {
-    if (confirm("УДАЛИТЬ ЭТОТ ФАЙЛ?")) {
-      storage.splice(currentId, 1);
-      if (storage.length === 0) storage = [{name: "", desc: "", img: ""}];
-      currentId = 0;
-      autoSave();
-      load();
+  function deleteFile() {
+    if (confirm("ТОЧНО УДАЛИТЬ?")) {
+      db.splice(current, 1);
+      if (db.length === 0) db = [{name: "", desc: "", img: ""}];
+      current = 0;
+      save();
+      render();
     }
   }
 
-  function toggleMenu() { document.querySelector('#mob-list').style.display = 
-    document.querySelector('#mob-list').style.display === 'block' ? 'none' : 'block'; }
+  function toggleMenu() {
+    const m = document.getElementById('mob-list');
+    m.style.display = (m.style.display === 'block') ? 'none' : 'block';
+  }
 
-  function download() {
+  function downloadPng() {
     const area = document.getElementById('capture-area');
     html2canvas(area, { backgroundColor: "#121212", scale: 2 }).then(canvas => {
       const link = document.createElement('a');
-      link.download = 'creature.png';
+      link.download = (db[current].name || 'creature') + '.png';
       link.href = canvas.toDataURL();
       link.click();
     });
